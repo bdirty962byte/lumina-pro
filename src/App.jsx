@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Trash2, Download, X, Clipboard, Image as ImageIcon, Plus, Info, ZoomIn, ZoomOut, Maximize2, Move, ChevronLeft, ChevronRight, Edit3, Check, Sparkles, Tag, Type, Filter } from 'lucide-react';
+import { Trash2, Download, X, Clipboard, Image as ImageIcon, Plus, Info, ZoomIn, ZoomOut, Maximize2, Move, ChevronLeft, ChevronRight, Edit3, Check, Sparkles, Tag, Type, Filter, Search, Copy, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { savePhoto, getAllPhotos, deletePhoto, updatePhoto } from './storage';
 import './App.css';
@@ -24,8 +24,10 @@ function App() {
   const [isPanning, setIsPanning] = useState(false);
   const [startPanPos, setStartPanPos] = useState({ x: 0, y: 0 });
 
-  // Filter State
+  // Filter & Search State
   const [activeGroup, setActiveGroup] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [copyStatus, setCopyStatus] = useState(null); // 'copied' or null
 
   // Renaming/Editing State
   const [isEditing, setIsEditing] = useState(false);
@@ -76,9 +78,25 @@ function App() {
   }, [photos]);
 
   const filteredPhotos = useMemo(() => {
-    if (activeGroup === 'All') return photos;
-    return photos.filter(p => p.group === activeGroup);
-  }, [photos, activeGroup]);
+    let result = photos;
+
+    // Group filter
+    if (activeGroup !== 'All') {
+      result = result.filter(p => p.group === activeGroup);
+    }
+
+    // Search query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        (p.caption && p.caption.toLowerCase().includes(q)) ||
+        (p.group && p.group.toLowerCase().includes(q))
+      );
+    }
+
+    return result;
+  }, [photos, activeGroup, searchQuery]);
 
   const handleImageInput = (blob) => {
     const reader = new FileReader();
@@ -132,6 +150,19 @@ function App() {
     a.download = `${name}.jpg`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleCopyToClipboard = async (e, blob) => {
+    if (e) e.stopPropagation();
+    try {
+      const item = new ClipboardItem({ [blob.type]: blob });
+      await navigator.clipboard.write([item]);
+      setCopyStatus('copied');
+      setTimeout(() => setCopyStatus(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy image: ', err);
+      alert('Unable to copy image. Your browser might not support this feature.');
+    }
   };
 
   const importFromClipboard = async () => {
@@ -252,6 +283,18 @@ function App() {
           <div className="logo">Lumina Pro</div>
           <div className="tagline">Premium Snap Gallery</div>
         </div>
+
+        <div className="search-bar glass-panel">
+          <Search size={18} className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search snapshots..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && <X size={16} className="clear-search" onClick={() => setSearchQuery('')} />}
+        </div>
+
         <div className="header-actions">
           {groups.length > 1 && (
             <div className="group-filter glass-panel">
@@ -290,6 +333,15 @@ function App() {
               Check Clipboard
             </button>
           </div>
+        ) : filteredPhotos.length === 0 ? (
+          <div className="empty-state">
+            <Search size={80} style={{ opacity: 0.1, marginBottom: '2rem' }} />
+            <h2>No snapshots found</h2>
+            <p>Try adjusting your search or filters.</p>
+            <button className="paster-btn" onClick={() => { setSearchQuery(''); setActiveGroup('All'); }}>
+              Clear Filters
+            </button>
+          </div>
         ) : (
           <div className="gallery-grid">
             {filteredPhotos.map((photo, index) => (
@@ -310,6 +362,7 @@ function App() {
                   {photo.caption && <p className="photo-caption-preview">{photo.caption}</p>}
                   <div className="photo-actions">
                     <button onClick={(e) => startEditing(e, photo, index)} title="Edit Details"><Edit3 size={18} /></button>
+                    <button onClick={(e) => handleCopyToClipboard(e, photo.blob)} title="Copy to Clipboard"><Copy size={18} /></button>
                     <button onClick={(e) => handleDownload(e, photo.blob, photo.name)} title="Download"><Download size={18} /></button>
                     <button className="delete-btn" onClick={(e) => handleDelete(e, photo.id)} title="Delete"><Trash2 size={18} /></button>
                   </div>
@@ -479,6 +532,14 @@ function App() {
               <div style={{ width: '1px', height: '30px', background: 'rgba(255,255,255,0.1)', margin: '0 1rem' }} />
               <button className="zoom-btn" onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}>
                 <Maximize2 size={24} />
+              </button>
+              <div style={{ width: '1px', height: '30px', background: 'rgba(255,255,255,0.1)', margin: '0 1rem' }} />
+              <button
+                className="zoom-btn"
+                onClick={(e) => handleCopyToClipboard(e, selectedPhoto.blob)}
+                style={{ color: copyStatus ? 'var(--accent-secondary)' : 'white' }}
+              >
+                {copyStatus ? <CheckCircle size={24} /> : <Copy size={24} />}
               </button>
             </div>
           </motion.div>
