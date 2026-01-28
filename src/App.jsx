@@ -210,14 +210,18 @@ function App() {
     }
   };
 
-  const startEditing = (e, photo) => {
-    e.stopPropagation();
+  const startEditing = (e, photo, index) => {
+    if (e) e.stopPropagation();
+    setSelectedPhoto(photo);
+    setSelectedIndex(index);
     setIsEditing(true);
     setEditFields({
       name: photo.name,
       caption: photo.caption || '',
       group: photo.group || ''
     });
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
   };
 
   const saveEdits = async (id) => {
@@ -305,7 +309,7 @@ function App() {
                   <span className="photo-name">{photo.name}</span>
                   {photo.caption && <p className="photo-caption-preview">{photo.caption}</p>}
                   <div className="photo-actions">
-                    <button onClick={(e) => startEditing(e, photo)} title="Edit Details"><Edit3 size={18} /></button>
+                    <button onClick={(e) => startEditing(e, photo, index)} title="Edit Details"><Edit3 size={18} /></button>
                     <button onClick={(e) => handleDownload(e, photo.blob, photo.name)} title="Download"><Download size={18} /></button>
                     <button className="delete-btn" onClick={(e) => handleDelete(e, photo.id)} title="Delete"><Trash2 size={18} /></button>
                   </div>
@@ -421,7 +425,7 @@ function App() {
                     {selectedPhoto.group && <span className="viewer-group-tag">{selectedPhoto.group}</span>}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                       <h2 style={{ fontSize: '2rem', fontWeight: 800 }}>{selectedPhoto.name}</h2>
-                      <button onClick={(e) => startEditing(e, selectedPhoto)} className="viewer-edit-btn">
+                      <button onClick={(e) => startEditing(e, selectedPhoto, selectedIndex)} className="viewer-edit-btn">
                         <Edit3 size={24} style={{ opacity: 0.5 }} />
                       </button>
                     </div>
