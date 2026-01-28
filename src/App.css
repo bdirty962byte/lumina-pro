@@ -74,6 +74,30 @@ header {
   margin-top: 0.5rem;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.group-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+}
+
+.group-filter select {
+  background: transparent;
+  color: white;
+  border: none;
+  font-family: inherit;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+}
+
 .import-btn {
   display: flex;
   align-items: center;
@@ -90,11 +114,6 @@ header {
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.import-btn:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 15px 50px rgba(217, 70, 239, 0.4);
-}
-
 .instruction-bar {
   display: flex;
   align-items: center;
@@ -106,14 +125,6 @@ header {
   color: var(--text-secondary);
   background: var(--glass);
   border: 1px solid var(--border);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-}
-
-.instruction-bar strong {
-  color: var(--accent-color);
-  background: rgba(139, 92, 246, 0.1);
-  padding: 0.25rem 0.75rem;
-  border-radius: 8px;
 }
 
 /* Gallery Grid */
@@ -145,17 +156,12 @@ header {
 .photo-card:hover {
   transform: translateY(-8px);
   border-color: var(--accent-color);
-  box-shadow: 0 30px 60px rgba(139, 92, 246, 0.15);
-}
-
-.photo-card:hover img {
-  transform: scale(1.1);
 }
 
 .photo-info {
   position: absolute;
   inset: 0;
-  background: linear-gradient(transparent 40%, rgba(0, 0, 0, 1));
+  background: linear-gradient(transparent 20%, rgba(0, 0, 0, 0.95));
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -168,13 +174,32 @@ header {
   opacity: 1;
 }
 
+.photo-group-tag {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: var(--accent-gradient);
+  padding: 0.4rem 0.8rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .photo-name {
   font-weight: 700;
   font-size: 1.2rem;
-  margin-bottom: 0.75rem;
-  white-space: nowrap;
+  margin-bottom: 0.4rem;
+}
+
+.photo-caption-preview {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.25rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .photo-actions {
@@ -190,20 +215,129 @@ header {
   border: 1px solid var(--border);
   cursor: pointer;
   backdrop-filter: blur(10px);
-  transition: all 0.2s;
 }
 
-.photo-actions button:hover {
+/* Modals & Inputs */
+.naming-modal {
+  background: var(--panel-color);
+  padding: 3rem;
+  border-radius: 40px;
+  width: 100%;
+  max-width: 550px;
+  border: 1px solid var(--border);
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
+}
+
+.input-field {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1.25rem;
+  top: 1.25rem;
+  color: var(--accent-color);
+  opacity: 0.7;
+}
+
+.input-field input,
+.input-field textarea {
+  width: 100%;
+  padding: 1.25rem 1.25rem 1.25rem 3.5rem;
+  background: #000;
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  color: white;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.input-field textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.input-field input:focus,
+.input-field textarea:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+}
+
+/* Viewer Overlay Extensions */
+.viewer-metadata {
+  max-width: 600px;
+}
+
+.viewer-group-tag {
   background: var(--accent-gradient);
-  border-color: transparent;
-  transform: translateY(-2px);
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  display: inline-block;
+  margin-bottom: 1rem;
 }
 
-.photo-actions .delete-btn:hover {
-  background: var(--danger);
+.viewer-caption {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin-top: 1rem;
+  white-space: pre-wrap;
 }
 
-/* Modals */
+.edit-details-box {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 20px;
+  width: 500px;
+}
+
+.edit-title {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--accent-color);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: white;
+  outline: none;
+}
+
+.edit-caption {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  color: white;
+  font-family: inherit;
+  min-height: 100px;
+  outline: none;
+}
+
+.edit-group {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.75rem;
+  color: white;
+}
+
+.save-edit-btn {
+  background: var(--accent-gradient);
+  color: white;
+  padding: 0 1rem;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Other core styles from original */
 .overlay {
   position: fixed;
   inset: 0;
@@ -216,22 +350,6 @@ header {
   padding: 2rem;
 }
 
-.naming-modal {
-  background: var(--panel-color);
-  padding: 3rem;
-  border-radius: 40px;
-  width: 100%;
-  max-width: 520px;
-  border: 1px solid var(--border);
-  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
-}
-
-.naming-modal h2 {
-  font-size: 2rem;
-  margin-bottom: 2rem;
-  font-weight: 800;
-}
-
 .preview-container {
   border-radius: 24px;
   overflow: hidden;
@@ -242,31 +360,6 @@ header {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-}
-
-.preview-container img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
-.naming-modal input {
-  width: 100%;
-  padding: 1.25rem 1.75rem;
-  background: #000;
-  border: 2px solid var(--border);
-  border-radius: 20px;
-  color: white;
-  font-size: 1.1rem;
-  margin-bottom: 2.5rem;
-  outline: none;
-  transition: all 0.3s;
-}
-
-.naming-modal input:focus {
-  border-color: var(--accent-color);
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
 }
 
 .modal-btns {
@@ -288,15 +381,8 @@ header {
 .save-btn {
   background: var(--accent-gradient);
   color: white;
-  box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
 }
 
-.save-btn:hover {
-  transform: scale(1.02);
-  box-shadow: 0 15px 40px rgba(217, 70, 239, 0.4);
-}
-
-/* Empty State */
 .empty-state {
   text-align: center;
   margin-top: 10rem;
@@ -308,7 +394,6 @@ header {
 .empty-icon-stack {
   position: relative;
   margin-bottom: 3rem;
-  filter: drop-shadow(0 0 30px rgba(139, 92, 246, 0.2));
 }
 
 .icon-base {
@@ -324,38 +409,6 @@ header {
   color: var(--accent-color);
 }
 
-.empty-state h2 {
-  font-size: 2.5rem;
-  font-weight: 800;
-  margin-bottom: 1rem;
-}
-
-.empty-state p {
-  color: var(--text-secondary);
-  font-size: 1.2rem;
-  margin-bottom: 3rem;
-  max-width: 500px;
-}
-
-.paster-btn {
-  background: var(--glass-heavy);
-  border: 1px solid var(--border);
-  color: var(--text-primary);
-  padding: 1rem 3rem;
-  border-radius: 18px;
-  font-weight: 700;
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.paster-btn:hover {
-  background: white;
-  color: black;
-  transform: translateY(-2px);
-}
-
-/* Viewer Overlay */
 .viewer-overlay {
   position: fixed;
   inset: 0;
@@ -391,18 +444,12 @@ header {
   cursor: grab;
 }
 
-.viewer-content:active {
-  cursor: grabbing;
-}
-
 .viewer-image {
   max-width: 90%;
   max-height: 85%;
   object-fit: contain;
-  transition: transform 0.15s cubic-bezier(0.23, 1, 0.32, 1);
-  user-select: none;
-  -webkit-user-drag: none;
   filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.8));
+  transition: transform 0.15s;
 }
 
 .viewer-controls {
@@ -419,27 +466,16 @@ header {
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   z-index: 2010;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
 .zoom-btn {
   color: white;
   opacity: 0.6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 0.75rem;
   border-radius: 14px;
   background: none;
   border: none;
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.zoom-btn:hover {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.1);
-  transform: scale(1.1);
 }
 
 .zoom-level {
@@ -447,7 +483,6 @@ header {
   font-weight: 700;
   min-width: 4rem;
   text-align: center;
-  font-variant-numeric: tabular-nums;
 }
 
 .nav-btn {
@@ -465,16 +500,11 @@ header {
   align-items: center;
   justify-content: center;
   z-index: 2010;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  backdrop-filter: blur(10px);
+  transition: all 0.3s;
 }
 
 .nav-btn:hover {
   background: var(--accent-gradient);
-  border-color: transparent;
-  width: 90px;
-  height: 90px;
-  box-shadow: 0 0 40px rgba(139, 92, 246, 0.4);
 }
 
 .prev-btn {
@@ -496,47 +526,12 @@ header {
   justify-content: center;
   border: none;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .close-viewer:hover {
   background: var(--danger);
-  transform: rotate(90deg) scale(1.1);
 }
 
-.edit-name-inline {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.edit-name-inline input {
-  background: rgba(0, 0, 0, 0.5);
-  border: 2px solid var(--accent-color);
-  border-radius: 12px;
-  padding: 0.5rem 1rem;
-  color: white;
-  font-size: 1.5rem;
-  font-weight: 800;
-  outline: none;
-  width: 350px;
-}
-
-.save-edit-btn {
-  background: var(--accent-gradient);
-  color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
-}
-
-/* Drag Indicator */
 .drop-indicator {
   position: fixed;
   inset: 1.5rem;
@@ -550,8 +545,7 @@ header {
   justify-content: center;
   gap: 1.5rem;
   opacity: 0;
-  transform: scale(0.95);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.4s;
   z-index: 5000;
 }
 

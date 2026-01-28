@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Trash2, Download, X, Clipboard, Image as ImageIcon, Plus, Info, ZoomIn, ZoomOut, Maximize2, Move, ChevronLeft, ChevronRight, Edit3, Check, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Trash2, Download, X, Clipboard, Image as ImageIcon, Plus, Info, ZoomIn, ZoomOut, Maximize2, Move, ChevronLeft, ChevronRight, Edit3, Check, Sparkles, Tag, Type, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { savePhoto, getAllPhotos, deletePhoto, updatePhoto } from './storage';
 import './App.css';
@@ -8,6 +8,9 @@ function App() {
   const [photos, setPhotos] = useState([]);
   const [isNaming, setIsNaming] = useState(false);
   const [photoName, setPhotoName] = useState('');
+  const [photoCaption, setPhotoCaption] = useState('');
+  const [photoGroup, setPhotoGroup] = useState('');
+
   const [capturedBlob, setCapturedBlob] = useState(null);
   const [capturedDataUrl, setCapturedDataUrl] = useState(null);
   const [showFlash, setShowFlash] = useState(false);
@@ -21,9 +24,12 @@ function App() {
   const [isPanning, setIsPanning] = useState(false);
   const [startPanPos, setStartPanPos] = useState({ x: 0, y: 0 });
 
-  // Renaming State
+  // Filter State
+  const [activeGroup, setActiveGroup] = useState('All');
+
+  // Renaming/Editing State
   const [isEditing, setIsEditing] = useState(false);
-  const [newName, setNewName] = useState('');
+  const [editFields, setEditFields] = useState({ name: '', caption: '', group: '' });
 
   useEffect(() => {
     loadPhotos();
@@ -61,12 +67,28 @@ function App() {
     setPhotos(data.reverse());
   };
 
+  const groups = useMemo(() => {
+    const g = new Set(['All']);
+    photos.forEach(p => {
+      if (p.group) g.add(p.group);
+    });
+    return Array.from(g);
+  }, [photos]);
+
+  const filteredPhotos = useMemo(() => {
+    if (activeGroup === 'All') return photos;
+    return photos.filter(p => p.group === activeGroup);
+  }, [photos, activeGroup]);
+
   const handleImageInput = (blob) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       setCapturedDataUrl(e.target.result);
       setCapturedBlob(blob);
       setIsNaming(true);
+      setPhotoName('');
+      setPhotoCaption('');
+      setPhotoGroup('');
       setShowFlash(true);
       setTimeout(() => setShowFlash(false), 200);
     };
@@ -76,8 +98,7 @@ function App() {
   const handleSave = async () => {
     if (capturedBlob) {
       const finalName = photoName.trim() || `Snap ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-      await savePhoto(capturedBlob, finalName);
-      setPhotoName('');
+      await savePhoto(capturedBlob, finalName, photoCaption.trim(), photoGroup.trim());
       setIsNaming(false);
       setCapturedBlob(null);
       setCapturedDataUrl(null);
@@ -192,16 +213,25 @@ function App() {
   const startEditing = (e, photo) => {
     e.stopPropagation();
     setIsEditing(true);
-    setNewName(photo.name);
+    setEditFields({
+      name: photo.name,
+      caption: photo.caption || '',
+      group: photo.group || ''
+    });
   };
 
-  const saveNewName = async (id) => {
-    if (newName.trim()) {
-      await updatePhoto(id, { name: newName.trim() });
+  const saveEdits = async (id) => {
+    if (editFields.name.trim()) {
+      const updates = {
+        name: editFields.name.trim(),
+        caption: editFields.caption.trim(),
+        group: editFields.group.trim()
+      };
+      await updatePhoto(id, updates);
       await loadPhotos();
       setIsEditing(false);
       if (selectedPhoto && selectedPhoto.id === id) {
-        setSelectedPhoto(prev => ({ ...prev, name: newName.trim() }));
+        setSelectedPhoto(prev => ({ ...prev, ...updates }));
       }
     }
   };
@@ -219,6 +249,14 @@ function App() {
           <div className="tagline">Premium Snap Gallery</div>
         </div>
         <div className="header-actions">
+          {groups.length > 1 && (
+            <div className="group-filter glass-panel">
+              <Filter size={16} />
+              <select value={activeGroup} onChange={(e) => setActiveGroup(e.target.value)}>
+                {groups.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
+          )}
           <button className="import-btn" onClick={importFromClipboard}>
             <Sparkles size={20} />
             Magic Import
@@ -243,14 +281,14 @@ function App() {
               <ImageIcon size={60} className="icon-overlay" />
             </motion.div>
             <h2>Your Gallery Awaits</h2>
-            <p>Ready to store your high-res captures. Take a snap and paste it here.</p>
+            <p>Ready to store your high-res captures with captions and groups.</p>
             <button className="paster-btn" onClick={importFromClipboard}>
               Check Clipboard
             </button>
           </div>
         ) : (
           <div className="gallery-grid">
-            {photos.map((photo, index) => (
+            {filteredPhotos.map((photo, index) => (
               <motion.div
                 key={photo.id}
                 layout
@@ -263,9 +301,11 @@ function App() {
               >
                 <img src={URL.createObjectURL(photo.blob)} alt={photo.name} />
                 <div className="photo-info">
+                  {photo.group && <span className="photo-group-tag">{photo.group}</span>}
                   <span className="photo-name">{photo.name}</span>
+                  {photo.caption && <p className="photo-caption-preview">{photo.caption}</p>}
                   <div className="photo-actions">
-                    <button onClick={(e) => startEditing(e, photo)} title="Rename"><Edit3 size={18} /></button>
+                    <button onClick={(e) => startEditing(e, photo)} title="Edit Details"><Edit3 size={18} /></button>
                     <button onClick={(e) => handleDownload(e, photo.blob, photo.name)} title="Download"><Download size={18} /></button>
                     <button className="delete-btn" onClick={(e) => handleDelete(e, photo.id)} title="Delete"><Trash2 size={18} /></button>
                   </div>
@@ -278,7 +318,7 @@ function App() {
 
       {showFlash && <div className="capture-flash" />}
 
-      {/* Naming Modal */}
+      {/* Naming / Capture Modal */}
       <AnimatePresence>
         {isNaming && (
           <motion.div
@@ -296,14 +336,37 @@ function App() {
               <div className="preview-container">
                 <img src={capturedDataUrl} alt="Preview" />
               </div>
-              <input
-                type="text"
-                placeholder="Label your masterpiece..."
-                value={photoName}
-                onChange={(e) => setPhotoName(e.target.value)}
-                autoFocus
-                onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-              />
+
+              <div className="input-field">
+                <Type size={18} className="input-icon" />
+                <input
+                  type="text"
+                  placeholder="Title (with emojis! 🎨)"
+                  value={photoName}
+                  onChange={(e) => setPhotoName(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
+              <div className="input-field">
+                <Edit3 size={18} className="input-icon" />
+                <textarea
+                  placeholder="Add a caption... 📝"
+                  value={photoCaption}
+                  onChange={(e) => setPhotoCaption(e.target.value)}
+                />
+              </div>
+
+              <div className="input-field">
+                <Tag size={18} className="input-icon" />
+                <input
+                  type="text"
+                  placeholder="Group / Collection name"
+                  value={photoGroup}
+                  onChange={(e) => setPhotoGroup(e.target.value)}
+                />
+              </div>
+
               <div className="modal-btns">
                 <button className="glass-panel" onClick={() => setIsNaming(false)}>Cancel</button>
                 <button className="save-btn" onClick={handleSave}>Add to Pro Gallery</button>
@@ -326,27 +389,46 @@ function App() {
             <div className="viewer-header">
               <div className="viewer-info">
                 {isEditing ? (
-                  <div className="edit-name-inline">
+                  <div className="edit-details-box glass-panel">
                     <input
                       type="text"
-                      value={newName}
-                      onChange={(e) => setNewName(e.target.value)}
+                      className="edit-title"
+                      value={editFields.name}
+                      onChange={(e) => setEditFields({ ...editFields, name: e.target.value })}
                       autoFocus
-                      onKeyDown={(e) => e.key === 'Enter' && saveNewName(selectedPhoto.id)}
                     />
-                    <button onClick={() => saveNewName(selectedPhoto.id)} className="save-edit-btn">
-                      <Check size={20} />
-                    </button>
+                    <textarea
+                      className="edit-caption"
+                      value={editFields.caption}
+                      placeholder="Add caption..."
+                      onChange={(e) => setEditFields({ ...editFields, caption: e.target.value })}
+                    />
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                      <input
+                        type="text"
+                        className="edit-group"
+                        value={editFields.group}
+                        placeholder="Group..."
+                        onChange={(e) => setEditFields({ ...editFields, group: e.target.value })}
+                      />
+                      <button onClick={() => saveEdits(selectedPhoto.id)} className="save-edit-btn">
+                        <Check size={20} />
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                    <h2 style={{ fontSize: '2rem', fontWeight: 800 }}>{selectedPhoto.name}</h2>
-                    <button onClick={(e) => startEditing(e, selectedPhoto)} className="viewer-edit-btn">
-                      <Edit3 size={24} style={{ opacity: 0.5 }} />
-                    </button>
+                  <div className="viewer-metadata">
+                    {selectedPhoto.group && <span className="viewer-group-tag">{selectedPhoto.group}</span>}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                      <h2 style={{ fontSize: '2rem', fontWeight: 800 }}>{selectedPhoto.name}</h2>
+                      <button onClick={(e) => startEditing(e, selectedPhoto)} className="viewer-edit-btn">
+                        <Edit3 size={24} style={{ opacity: 0.5 }} />
+                      </button>
+                    </div>
+                    {selectedPhoto.caption && <p className="viewer-caption">{selectedPhoto.caption}</p>}
+                    <p style={{ opacity: 0.4, fontSize: '0.8rem', marginTop: '0.5rem' }}>Captured on {new Date(selectedPhoto.timestamp).toLocaleString()}</p>
                   </div>
                 )}
-                <p style={{ opacity: 0.4 }}>Created on {new Date(selectedPhoto.timestamp).toDateString()}</p>
               </div>
               <button className="close-viewer" onClick={closeViewer}>
                 <X size={32} />

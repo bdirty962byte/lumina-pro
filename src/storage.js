@@ -19,11 +19,13 @@ export async function initDB() {
     return db;
 }
 
-export async function savePhoto(photoBlob, name) {
+export async function savePhoto(photoBlob, name, caption = '', group = '') {
     const db = await initDB();
     const photo = {
         blob: photoBlob,
         name: name,
+        caption: caption,
+        group: group,
         timestamp: Date.now(),
     };
     return db.add(STORE_NAME, photo);
